@@ -1,15 +1,18 @@
 const express = require("express");
 
 const app = express();
+const { checkAuth } = require("./middlewares/auth");
 
-app.use('/user', (req, res) => {
-    res.send("Hi, I am an user!");
+app.use("/admin", checkAuth);
+
+app.use("/admin/getAllData", (req, res) => {
+  res.send("All data sent");
 });
 
-app.post('/users', (req, res) => {
-    res.send("Hi, I am an user to be posted!");
+app.use("/admin/deleteAllData", (req, res) => {
+  res.send("All data deleted");
 });
 
 app.listen(3000, () => {
-    console.log("Sever is successfully listening on port 3000");
+  console.log("Sever is successfully listening on port 3000");
 });
