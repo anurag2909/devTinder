@@ -7,7 +7,7 @@ const User = require("./models/user");
 app.use(express.json());
 
 app.post("/signup", async (req, res) => {
-  console.log(req.body);
+  //console.log(req.body);
   const user = new User(req.body);
 
   try {
@@ -55,11 +55,13 @@ app.patch("/user", async (req, res) => {
   const data = req.body;
 
   try {
-    const user = await User.findByIdAndUpdate(userId, data);
+    const user = await User.findByIdAndUpdate(userId, data, {
+      runValidators: true,
+    });
     console.log("User updated successfully!");
     res.send("User updated successfully!");
   } catch (err) {
-    res.status(404).send("Something went wrong!");
+    res.status(404).send(err.message);
   }
 });
 
