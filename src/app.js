@@ -5,8 +5,11 @@ const { connectDB } = require("./config/database");
 const User = require("./models/user");
 const { validateSignUpData } = require("./utils/validation");
 const bcrypt = require("bcrypt");
+const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
 
 app.use(express.json());
+app.use(cookieParser());
 
 app.post("/signup", async (req, res) => {
   try {
@@ -14,7 +17,7 @@ app.post("/signup", async (req, res) => {
     validateSignUpData(req);
 
     // Encrypt the password
-    const { firstName, lastName, emailId, password } = req.body;
+    const { firstName, lastName, emailId, password, skills, age } = req.body;
     const passwordHash = await bcrypt.hash(password, 10);
 
     // Creating a new instance of the user model
@@ -22,6 +25,8 @@ app.post("/signup", async (req, res) => {
       firstName,
       lastName,
       emailId,
+      skills,
+      age,
       password: passwordHash,
     });
 
@@ -47,8 +52,44 @@ app.post("/login", async (req, res) => {
     if (!isPasswordValid) {
       throw new Error("Entered password is incorrect!");
     } else {
+      // Create a JWT Token
+      const token = await jwt.sign({ _id: user._id }, "dev@tinder#7290");
+      console.log(token);
+
+      // Add the token to cookie and send the response back to the user
+
+      res.cookie("token", token);
       res.send("User logged in successfully!");
     }
+  } catch (err) {
+    res.status(400).send("ERROR: " + err.message);
+  }
+});
+
+app.get("/profile", async (req, res) => {
+  try {
+    const cookies = req.cookies;
+    console.log(cookies);
+
+    const { token } = cookies;
+
+    if (!token) {
+      throw new Error("Invalid token!");
+    }
+
+    // Veriy the token
+    const decodedMeassage = jwt.verify(token, "dev@tinder#7290");
+
+    console.log(decodedMeassage);
+    const { _id } = decodedMeassage;
+
+    const user = await User.findById(_id);
+
+    if (!user) {
+      throw new Error("Invalid user!");
+    }
+
+    res.send(user);
   } catch (err) {
     res.status(400).send("ERROR: " + err.message);
   }
