@@ -6,6 +6,7 @@ const User = require("./models/user");
 const { validateSignUpData } = require("./utils/validation");
 const cookieParser = require("cookie-parser");
 const { userAuth } = require("./middlewares/auth");
+const bcrypt = require("bcrypt");
 
 app.use(express.json());
 app.use(cookieParser());

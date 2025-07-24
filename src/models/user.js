@@ -70,9 +70,9 @@ const userSchema = mongoose.Schema(
   }
 );
 
-userSchema.methods.getJWT = async function () {
+userSchema.methods.getJWT = function () {
   const user = this;
-  const token = await jwt.sign({ _id: user._id }, "dev@tinder#7290", {
+  const token = jwt.sign({ _id: user._id }, "dev@tinder#7290", {
     expiresIn: "7d",
   });
 
