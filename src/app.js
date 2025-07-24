@@ -4,9 +4,7 @@ const app = express();
 const { connectDB } = require("./config/database");
 const User = require("./models/user");
 const { validateSignUpData } = require("./utils/validation");
-const bcrypt = require("bcrypt");
 const cookieParser = require("cookie-parser");
-const jwt = require("jsonwebtoken");
 const { userAuth } = require("./middlewares/auth");
 
 app.use(express.json());
@@ -48,13 +46,15 @@ app.post("/login", async (req, res) => {
       throw new Error("EmailId does not exist");
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    console.log(password);
+
+    const isPasswordValid = await user.validatePassword(password);
 
     if (!isPasswordValid) {
       throw new Error("Entered password is incorrect!");
     } else {
       // Create a JWT Token
-      const token = await jwt.sign({ _id: user._id }, "dev@tinder#7290");
+      const token = user.getJWT();
       console.log(token);
 
       // Add the token to cookie and send the response back to the user
