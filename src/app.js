@@ -7,13 +7,14 @@ const { validateSignUpData } = require("./utils/validation");
 const bcrypt = require("bcrypt");
 const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
+const { userAuth } = require("./middlewares/auth");
 
 app.use(express.json());
 app.use(cookieParser());
 
 app.post("/signup", async (req, res) => {
   try {
-    // Validate of the incoming data
+    // Validate the incoming data
     validateSignUpData(req);
 
     // Encrypt the password
@@ -66,104 +67,15 @@ app.post("/login", async (req, res) => {
   }
 });
 
-app.get("/profile", async (req, res) => {
+app.get("/profile", userAuth, async (req, res) => {
   try {
-    const cookies = req.cookies;
-    console.log(cookies);
-
-    const { token } = cookies;
-
-    if (!token) {
-      throw new Error("Invalid token!");
-    }
-
-    // Veriy the token
-    const decodedMeassage = jwt.verify(token, "dev@tinder#7290");
-
-    console.log(decodedMeassage);
-    const { _id } = decodedMeassage;
-
-    const user = await User.findById(_id);
-
-    if (!user) {
-      throw new Error("Invalid user!");
-    }
-
+    const user = req.user;
     res.send(user);
   } catch (err) {
     res.status(400).send("ERROR: " + err.message);
   }
 });
 
-app.get("/user", async (req, res) => {
-  const userEmail = req.body.emailId;
-
-  try {
-    const users = await User.find({ emailId: userEmail });
-    res.send(users);
-  } catch (err) {
-    res.status(404).send("Something went wrong!");
-  }
-});
-
-app.get("/feed", async (req, res) => {
-  try {
-    const users = await User.find({});
-    res.send(users);
-  } catch (err) {
-    res.status(404).send("Something went wrong");
-  }
-});
-
-app.delete("/user", async (req, res) => {
-  const userId = req.body.userId;
-  console.log("UserId -> " + userId);
-
-  try {
-    const user = await User.findByIdAndDelete(userId);
-    res.send("user deleted siccessfully");
-  } catch (err) {
-    res.status(404).send("Something went wrong");
-  }
-});
-
-app.patch("/user", async (req, res) => {
-  const userId = req.body.userId;
-  const data = req.body;
-
-  try {
-    const ALLOWED_UPDATES = [
-      "userId",
-      "photoUrl",
-      "about",
-      "gender",
-      "age",
-      "skills",
-    ];
-
-    const isUpdateAllowed = Object.keys(data).every((k) =>
-      ALLOWED_UPDATES.includes(k)
-    );
-
-    console.log("isUpdateAllowed -> " + isUpdateAllowed);
-
-    if (!isUpdateAllowed) {
-      throw new Error("Update not allowed!");
-    }
-
-    if (data?.skills.length > 10) {
-      throw new Error("Skills cannot be more than 10");
-    }
-
-    const user = await User.findByIdAndUpdate(userId, data, {
-      runValidators: true,
-    });
-    console.log("User updated successfully!");
-    res.send("User updated successfully!");
-  } catch (err) {
-    res.status(404).send(err.message);
-  }
-});
 
 connectDB()
   .then(() => {
